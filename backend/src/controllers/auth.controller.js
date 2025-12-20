@@ -11,8 +11,10 @@ export const register = async (req, res) => {
 
         if (!["M", "F"].includes(gender_)) {
             return res.status(400).json({
+                data: null,
                 success: false,
                 message: "Gender must be one of: [M, F]",
+                error: "Gender must be one of: [M, F]"
             });
         }
 
@@ -30,16 +32,19 @@ export const register = async (req, res) => {
         );
 
         return res.status(201).json({
+            data: { user_id: result.rows[0].id },
             success: true,
             message: "User registered successfully. Please verify email and mobile.",
-            data: { user_id: result.rows[0].id },
+            error: null
         });
 
     } catch (error) {
         console.error(error);
         return res.status(500).json({
+            data: null,
             success: false,
             message: "Registration failed",
+            error: error.message
         });
     }
 }
@@ -54,8 +59,10 @@ export const login = async (req, res) => {
 
         if (result.rows.length === 0) {
             return res.status(401).json({
+                data: null,
                 success: false,
                 message: "Invalid email or password",
+                error: "Invalid email or password"
             });
         }
 
@@ -64,8 +71,10 @@ export const login = async (req, res) => {
 
         if (!isMatch) {
             return res.status(401).json({
+                data: null,
                 success: false,
                 message: "Invalid email or password",
+                error: "Invalid email or password"
             });
         }
 
@@ -74,16 +83,19 @@ export const login = async (req, res) => {
             email: user.email,
         });
         return res.status(200).json({
+            data: { token },
             success: true,
             message: "Login successful",
-            token,
+            error: null
         });
 
     } catch (error) {
         console.error(error);
         return res.status(500).json({
+            data: null,
             success: false,
             message: "Login failed",
+            error: error.message
         });
     }
 };
