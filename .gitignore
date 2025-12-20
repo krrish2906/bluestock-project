@@ -1,0 +1,19 @@
+# Node
+node_modules/
+
+# Env
+.env
+
+# Firebase
+backend/src/config/firebase-admin.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+
+warmup.pdf
+database/company_db
