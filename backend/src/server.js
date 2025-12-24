@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 
 // Local imports:-
 import authRoutes from "./routes/auth.routes.js";
+import companyRoutes from "./routes/company.routes.js";
 
 dotenv.config();
 const app = express();
@@ -19,6 +20,7 @@ app.use(express.json());
 
 // Route configurations:-
 app.use("/api/auth", authRoutes);
+app.use("/api/company", companyRoutes);
 
 
 app.listen(PORT, () => {
