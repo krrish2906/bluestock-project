@@ -49,6 +49,45 @@ export const register = async (req, res) => {
     }
 }
 
+export const getProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        const result = await pool.query(
+            `SELECT id, email, full_name, gender, mobile_no, created_at, updated_at 
+             FROM users 
+             WHERE id = $1`,
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                data: null,
+                success: false,
+                message: "User not found",
+                error: "User not found"
+            });
+        }
+
+        const user = result.rows[0];
+        return res.status(200).json({
+            data: user,
+            success: true,
+            message: "Profile retrieved successfully",
+            error: null
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            data: null,
+            success: false,
+            message: "Failed to fetch profile",
+            error: error.message
+        });
+    }
+}
+
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -99,3 +138,4 @@ export const login = async (req, res) => {
         });
     }
 };
+
