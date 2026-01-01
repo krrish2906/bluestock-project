@@ -28,3 +28,8 @@ export const uploadCompanyBanner = async (file) => {
     });
     return res.data;
 };
+
+export const updateCompanyProfile = async (profileData) => {
+    const res = await api.put('/company/profile', profileData);
+    return res.data;
+};

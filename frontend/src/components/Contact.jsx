@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, Mail, MapPin, ArrowRight } from 'lucide-react';
+import { updateCompanyProfile } from '../api/company';
 
 export default function Contact({
     address,
@@ -18,18 +19,55 @@ export default function Contact({
     onPhoneChange,
     onEmailChange,
     onPrevious,
-    onNext
+    companyName,
+    aboutUs,
+    logoFile,
+    bannerFile,
+    organizationType,
+    industryTypes,
+    teamSize,
+    yearOfEstablishment,
+    companyWebsite,
+    companyVision,
+    socialLinks,
+    onUpdateSuccess
 }) {
-    const [countryCode, setCountryCode] = useState('+880');
+    const [countryCode, setCountryCode] = useState('+91');
+    const [countries, setCountries] = useState([]);
+    const [updating, setUpdating] = useState(false);
+    const [error, setError] = useState('');
 
-    const countryCodes = [
-        { code: '+880', country: 'BD', flag: '🇧🇩' },
-        { code: '+1', country: 'US', flag: '🇺🇸' },
-        { code: '+44', country: 'UK', flag: '🇬🇧' },
-        { code: '+91', country: 'IN', flag: '🇮🇳' },
-        { code: '+86', country: 'CN', flag: '🇨🇳' },
-        { code: '+81', country: 'JP', flag: '🇯🇵' }
-    ];
+    useEffect(() => {
+        const fetchCountries = async () => {
+            try {
+                const res = await fetch("https://restcountries.com/v3.1/all?fields=name,idd,flags");
+                const data = await res.json();
+
+                const formatted = data.filter((c) => c.idd?.root && c.idd?.suffixes && c.idd.suffixes.length > 0)
+                    .map((c) => ({
+                        name: c.name.common,
+                        code: `${c.idd.root}${c.idd.suffixes[0]}`,
+                        flag: c.flags.png,
+                    })).sort((a, b) => a.name.localeCompare(b.name));
+
+                setCountries(formatted);
+            } catch (err) {
+                console.error("Failed to load countries", err);
+            }
+        };
+        fetchCountries();
+    }, []);
+
+    // Extract country code from phone when countries are loaded
+    useEffect(() => {
+        if (countries.length > 0 && phone && phone.startsWith('+') && countryCode === '+91') {
+            const matchedCountry = countries.find(c => phone.startsWith(c.code));
+            if (matchedCountry) {
+                setCountryCode(matchedCountry.code);
+            }
+        }
+    }, [countries, phone, countryCode]);
+
 
     const handleInputChange = (e) => {
         if (!isEditing) return;
@@ -53,8 +91,67 @@ export default function Contact({
         }
     };
 
+    const handleFinishEditing = async () => {
+        setUpdating(true);
+        setError('');
+
+        try {
+            // Convert social links array back to object format
+            const socialLinksObj = {};
+            if (socialLinks && socialLinks.length > 0) {
+                socialLinks.forEach(link => {
+                    if (link.platform && link.url) {
+                        socialLinksObj[link.platform] = link.url;
+                    }
+                });
+            }
+
+            // Prepare the profile data
+            const profileData = {
+                company_name: companyName,
+                description: aboutUs,
+                logo_url: logoFile,
+                banner_url: bannerFile,
+                organization_type: organizationType,
+                industry: industryTypes && industryTypes.length > 0 ? industryTypes[0] : '',
+                team_size: teamSize,
+                founded_date: yearOfEstablishment ? new Date(yearOfEstablishment).toISOString() : null,
+                website: companyWebsite,
+                vision: companyVision,
+                social_links: socialLinksObj,
+                address: address,
+                city: city,
+                state: state,
+                country: country,
+                postal_code: postalCode,
+                phone: phone ? `${countryCode}${phone}` : '',
+                email: email
+            };
+
+            const response = await updateCompanyProfile(profileData);
+            
+            if (response.success) {
+                if (onUpdateSuccess) {
+                    onUpdateSuccess();
+                }
+            } else {
+                setError(response.error || 'Failed to update company profile');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to update company profile');
+            console.error('Failed to update company profile:', err);
+        } finally {
+            setUpdating(false);
+        }
+    };
+
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-10">
+            {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                    {error}
+                </div>
+            )}
             <div className="space-y-6">
                 {/* Address */}
                 <div>
@@ -148,9 +245,9 @@ export default function Contact({
                                 onChange={handleInputChange}
                                 className="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-md appearance-none bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                             >
-                                {countryCodes.map(country => (
-                                    <option key={country.code} value={country.code}>
-                                        {country.flag} {country.code}
+                                {countries.map(country => (
+                                    <option key={`${country.name}-${country.code}`} value={country.code}>
+                                        {country.code}
                                     </option>
                                 ))}
                             </select>
@@ -201,11 +298,12 @@ export default function Contact({
                             Previous
                         </button>
                         <button
-                            onClick={onNext}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 flex items-center gap-2"
+                            onClick={handleFinishEditing}
+                            disabled={updating}
+                            className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Finish Editing
-                            <ArrowRight size={20} />
+                            {updating ? 'Updating...' : 'Finish Editing'}
+                            {!updating && <ArrowRight size={20} />}
                         </button>
                     </div>
                 )}

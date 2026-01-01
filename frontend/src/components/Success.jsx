@@ -1,14 +1,25 @@
 import { Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Success() {
+export default function Success({ onViewDashboard, onViewProfile }) {
+    const navigate = useNavigate();
+
     const handleViewDashboard = () => {
-        console.log('Navigate to dashboard');
-        // Handle navigation to dashboard
+        if (onViewDashboard) {
+            onViewDashboard();
+        } else {
+            // Fallback: navigate to home which shows overview
+            navigate('/');
+        }
     };
 
     const handleViewProfile = () => {
-        console.log('Navigate to profile');
-        // Handle navigation to profile
+        if (onViewProfile) {
+            onViewProfile();
+        } else {
+            // Fallback: navigate to home
+            navigate('/');
+        }
     };
 
     return (

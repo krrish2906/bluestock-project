@@ -5,8 +5,9 @@ import CompanyInfo from './CompanyInfo';
 import FoundingInfo from './FoundingInfo';
 import Social from './Social';
 import Contact from './Contact';
+import Success from './Success';
 
-export default function CompanySetup() {
+export default function CompanySetup({ onNavigateToProfile }) {
     const [activeStep, setActiveStep] = useState('company');
     // Company Info State
     const [companyName, setCompanyName] = useState('');
@@ -38,6 +39,7 @@ export default function CompanySetup() {
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     useEffect(() => {
         const loadCompanyProfile = async () => {
@@ -127,6 +129,17 @@ export default function CompanySetup() {
         }
     };
 
+    // Calculate progress based on active step (25% per tab)
+    const getProgressPercentage = () => {
+        const stepProgress = {
+            'company': 25,
+            'founding': 50,
+            'social': 75,
+            'contact': 100
+        };
+        return stepProgress[activeStep] || 0;
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -149,8 +162,8 @@ export default function CompanySetup() {
                                     </span>
                                     <div className="w-40 h-2 bg-gray-200 rounded-full overflow-hidden">
                                         <div
-                                            className="h-full bg-blue-600 rounded-full"
-                                            style={{ width: '25%' }}
+                                            className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                                            style={{ width: `${getProgressPercentage()}%` }}
                                         />
                                     </div>
                                 </>
@@ -208,6 +221,19 @@ export default function CompanySetup() {
                             <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
                         </div>
                     </div>
+                ) : showSuccess ? (
+                    <Success 
+                        onViewDashboard={() => {
+                            setShowSuccess(false);
+                            setActiveStep('company');
+                            setIsEditing(false);
+                        }}
+                        onViewProfile={() => {
+                            if (onNavigateToProfile) {
+                                onNavigateToProfile();
+                            }
+                        }}
+                    />
                 ) : error ? (
                     <div className="bg-white rounded-lg shadow-sm border border-red-200 p-10 text-center">
                         <p className="text-red-600">{error}</p>
@@ -270,6 +296,18 @@ export default function CompanySetup() {
                         onEmailChange={setEmail}
                         onPrevious={handlePrevious}
                         onNext={handleNext}
+                        companyName={companyName}
+                        aboutUs={aboutUs}
+                        logoFile={logoFile}
+                        bannerFile={bannerFile}
+                        organizationType={organizationType}
+                        industryTypes={industryTypes}
+                        teamSize={teamSize}
+                        yearOfEstablishment={yearOfEstablishment}
+                        companyWebsite={companyWebsite}
+                        companyVision={companyVision}
+                        socialLinks={socialLinks}
+                        onUpdateSuccess={() => setShowSuccess(true)}
                     />
                 ) : (
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-10 text-center">
