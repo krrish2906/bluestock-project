@@ -6,9 +6,12 @@ import FoundingInfo from './FoundingInfo';
 import Social from './Social';
 import Contact from './Contact';
 import Success from './Success';
+import CreateCompanyForm from './CreateCompanyForm';
 
 export default function CompanySetup({ onNavigateToProfile }) {
     const [activeStep, setActiveStep] = useState('company');
+    const [noCompany, setNoCompany] = useState(false);
+    
     // Company Info State
     const [companyName, setCompanyName] = useState('');
     const [aboutUs, setAboutUs] = useState('');
@@ -45,6 +48,11 @@ export default function CompanySetup({ onNavigateToProfile }) {
         const loadCompanyProfile = async () => {
             try {
                 const response = await fetchCompanyProfile();
+                if (response.message === "Company profile not found") {
+                    setNoCompany(true);
+                    return;
+                }
+
                 if (response.success && response.data) {
                     const data = response.data;
                     // Company Info
@@ -90,11 +98,6 @@ export default function CompanySetup({ onNavigateToProfile }) {
 
         loadCompanyProfile();
     }, []);
-
-    // const handleLogoChange = (file) => setLogoFile(file);
-    // const handleBannerChange = (file) => setBannerFile(file);
-    // const handleCompanyNameChange = (name) => setCompanyName(name);
-    // const handleAboutUsChange = (about) => setAboutUs(about);
     
     const handleNext = () => {
         if (activeStep === 'company') {
@@ -129,7 +132,6 @@ export default function CompanySetup({ onNavigateToProfile }) {
         }
     };
 
-    // Calculate progress based on active step (25% per tab)
     const getProgressPercentage = () => {
         const stepProgress = {
             'company': 25,
@@ -139,6 +141,12 @@ export default function CompanySetup({ onNavigateToProfile }) {
         };
         return stepProgress[activeStep] || 0;
     };
+
+    if (noCompany) return (
+        <CreateCompanyForm
+            onSuccess={() => setNoCompany(false)}
+        />
+    );
 
     return (
         <div className="min-h-screen bg-gray-50">

@@ -6,7 +6,7 @@ import { generateToken } from "../utils/jwt.js";
 export const register = async (req, res) => {
     try {
         const { email, password, full_name, gender, mobile_no } = req.body;
-        const gender_ = gender?.trim().toUpperCase();
+        const gender_ = gender?.trim().toUpperCase()[0];
         const hashedPassword = await bcrypt.hash(password, 10);
 
         if (!["M", "F"].includes(gender_)) {
@@ -52,7 +52,6 @@ export const register = async (req, res) => {
 export const getProfile = async (req, res) => {
     try {
         const userId = req.user.id;
-        
         const result = await pool.query(
             `SELECT id, email, full_name, gender, mobile_no, created_at, updated_at 
              FROM users 
@@ -91,6 +90,8 @@ export const getProfile = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        const firebaseUser = await firebaseAuth.getUserByEmail(email);
+
         const result = await pool.query(
             `SELECT id, email, password FROM users WHERE email = $1`,
             [email]
@@ -120,6 +121,7 @@ export const login = async (req, res) => {
         const token = generateToken({
             id: user.id,
             email: user.email,
+            is_email_verified: firebaseUser.emailVerified
         });
         return res.status(200).json({
             data: { token },
@@ -139,3 +141,42 @@ export const login = async (req, res) => {
     }
 };
 
+export const getVerificationStatus = async (req, res) => {
+    try {
+        const { email } = req.user;
+        const firebaseUser = await firebaseAuth.getUserByEmail(email);
+
+        if (firebaseUser.emailVerified) {
+            const result = await pool.query(
+                `UPDATE users SET is_email_verified = true, 
+                updated_at = CURRENT_TIMESTAMP 
+                WHERE email = $1 RETURNING id, email, is_email_verified`,
+                [email]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User not found",
+                    error: "USER_NOT_FOUND"
+                });
+            }
+        }
+
+        req.user.is_email_verified = firebaseUser.emailVerified;
+        return res.status(200).json({
+            success: true,
+            message: "Email verification status retrieved successfully",
+            data: req.user,
+            error: null
+        });
+
+    } catch (error) {
+        console.error("Email verification error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to verify email",
+            error: error.message
+        });
+    }
+};

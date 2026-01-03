@@ -25,3 +25,24 @@ export const authMiddleware = (req, res, next) => {
         });
     }
 };
+
+export const requireEmailVerified = (req, res, next) => {
+    try {
+        if (!req.user?.is_email_verified) {
+            return res.status(403).json({
+                data: {},
+                success: false,
+                message: "Please verify your email to continue",
+                error: "Email not verified"
+            });
+        }
+        next();
+    } catch (error) {
+        return res.status(500).json({
+            data: {},
+            success: false,
+            message: "Verification check failed",
+            error: error.message
+        });
+    }
+};

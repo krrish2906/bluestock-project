@@ -5,8 +5,7 @@ import Overview from '../components/Overview';
 import NotImplemented from '../components/NotImplemented';
 
 export default function Home() {
-    const [activeSidebarItem, setActiveSidebarItem] =
-        useState('overview');
+    const [activeSidebarItem, setActiveSidebarItem] = useState('overview');
 
     const getComponentName = (item) => {
         const nameMap = {

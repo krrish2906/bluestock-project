@@ -1,7 +1,7 @@
 import express from "express";
 
 // Middlewares:-
-import { authMiddleware } from "../middleware/auth.middleware.js";
+import { authMiddleware, requireEmailVerified } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/upload.middleware.js";
 
 // Controllers:-
@@ -10,10 +10,10 @@ import { uploadCompanyLogo, uploadCompanyBanner } from "../controllers/company.c
 
 const router = express.Router();
 
-router.post("/register", authMiddleware, registerCompany);
-router.get("/profile", authMiddleware, getCompanyProfile);
-router.put("/profile", authMiddleware, updateCompanyProfile);
-router.post("/upload-logo", authMiddleware, upload.single("logo"), uploadCompanyLogo);
-router.post("/upload-banner", authMiddleware, upload.single("banner"), uploadCompanyBanner);
+router.post("/register", authMiddleware, requireEmailVerified, registerCompany);
+router.get("/profile", authMiddleware, requireEmailVerified, getCompanyProfile);
+router.put("/profile", authMiddleware, requireEmailVerified, updateCompanyProfile);
+router.post("/upload-logo", authMiddleware, requireEmailVerified, upload.single("logo"), uploadCompanyLogo);
+router.post("/upload-banner", authMiddleware, requireEmailVerified, upload.single("banner"), uploadCompanyBanner);
 
 export default router;

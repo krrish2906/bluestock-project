@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { auth } from "../config/firebase";
+import { toast } from 'react-toastify';
 
 const Register = () => {
+    const navigate = useNavigate();
     const [fullName, setFullName] = useState("");
     const [mobileNo, setMobileNo] = useState("");
     const [email, setEmail] = useState("");
@@ -14,9 +18,11 @@ const Register = () => {
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const [countries, setCountries] = useState([]);
     const [countryCode, setCountryCode] = useState("+91");
+    const [registered, setRegistered] = useState(false);
 
     useEffect(() => {
         const fetchCountries = async () => {
@@ -32,41 +38,78 @@ const Register = () => {
                     })).sort((a, b) => a.name.localeCompare(b.name));
 
                 setCountries(formatted);
-            } catch (err) {
-                setError("Failed to load countries")
-                console.error("Failed to load countries", err);
-            }
+            } catch (error) {
+                console.error("Registration error:", error);
+                const errorMsg = error.response?.data?.message ||
+                    error.message ||
+                    "An error occurred during registration";
+                setError(errorMsg);
+                toast.error(errorMsg);
+            } finally {
+                setIsLoading(false);
+            };
         };
         fetchCountries();
     }, []);
-    
-    const handleSubmit = async () => {
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         setError("");
-        
+        setIsLoading(true);
+
         if (!fullName || !mobileNo || !email || !gender || !password || !confirmPassword) {
-            setError("Please fill in all fields");
+            const errorMsg = "Please fill in all fields";
+            setError(errorMsg);
+            toast.error(errorMsg);
+            setIsLoading(false);
             return;
         }
-        
         if (password !== confirmPassword) {
-            setError("Passwords do not match");
+            const errorMsg = "Passwords do not match";
+            setError(errorMsg);
+            toast.error(errorMsg);
+            setIsLoading(false);
             return;
         }
-        
+
         try {
-            await api.post("/auth/register", {
-                full_name: fullName,
-                mobile_no: `${countryCode}${mobileNo}`,
+            const res = await api.post("/auth/register", {
+                fullName,
                 email,
-                gender,
                 password,
+                mobileNo: `${countryCode}${mobileNo}`,
+                gender,
             });
-            
-        } catch (err) {
-            setError(err.response?.data?.message || "Registration failed");
-        }
+
+            if (res.data.success) {
+                // Sign in the user
+                await signInWithEmailAndPassword(auth, email, password);
+                // Send verification email
+                await sendEmailVerification(auth.currentUser);
+                setRegistered(true);
+                toast.success('Registration successful! Please check your email for verification.');
+                // Redirect to login after a short delay
+                setTimeout(() => {
+                    navigate('/login');
+                }, 3000);
+            } else {
+                const errorMsg = res.data.message || "Registration failed";
+                setError(errorMsg);
+                toast.error(errorMsg);
+            };
+
+        } catch (error) {
+            console.error("Registration error:", error);
+            const errorMsg = error.response?.data?.message ||
+                error.message ||
+                "An error occurred during registration";
+            setError(errorMsg);
+            toast.error(errorMsg);
+        } finally {
+            setIsLoading(false);
+        };
     };
-    
+
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden max-w-4xl w-full flex">
@@ -84,6 +127,12 @@ const Register = () => {
                     {error && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
                             {error}
+                        </div>
+                    )}
+                    {!error && registered && (
+                        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm">
+                            Registration successful 🎉
+                            Please check your email and verify your account before logging in.
                         </div>
                     )}
 
@@ -189,8 +238,8 @@ const Register = () => {
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                                     >
                                         {showPassword ?
-                                        <FiEyeOff className="cursor-pointer" /> :
-                                        <FiEye className="cursor-pointer" />}
+                                            <FiEyeOff className="cursor-pointer" /> :
+                                            <FiEye className="cursor-pointer" />}
                                     </button>
                                 </div>
                             </div>
@@ -215,8 +264,8 @@ const Register = () => {
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                                     >
                                         {showConfirmPassword ?
-                                        <FiEyeOff className="cursor-pointer" /> :
-                                        <FiEye className="cursor-pointer" />}
+                                            <FiEyeOff className="cursor-pointer" /> :
+                                            <FiEye className="cursor-pointer" />}
                                     </button>
                                 </div>
                             </div>
@@ -224,10 +273,12 @@ const Register = () => {
 
                         {/* Register */}
                         <button
+                            type="submit"
                             onClick={handleSubmit}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-full mt-2"
+                            disabled={isLoading}
+                            className={`w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
-                            Register
+                            {isLoading ? 'Registering...' : 'Register'}
                         </button>
 
                         <p className="text-center text-sm text-gray-600 mt-0">

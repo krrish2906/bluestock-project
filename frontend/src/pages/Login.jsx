@@ -3,27 +3,59 @@ import { useDispatch } from "react-redux";
 import { loginSuccess } from "../store/authSlice";
 import api from "../api/axios";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setIsLoading(true);
 
         try {
             const res = await api.post("/auth/login", {
-                email,
-                password,
+                email, password
+            }, {
+                validateStatus: function (status) {
+                    return status < 500; 
+                }
             });
 
-            dispatch(loginSuccess(res.data.data.token));
+            if (res.data.success) {
+                dispatch(loginSuccess(res.data.data.token));
+                toast.success('Logged in successfully!');
+                navigate('/');
+            } else {
+                setError(res.data.message || 'Login failed');
+                toast.error(res.data.message || 'Login failed');
+            }
         } catch (err) {
-            setError(err.response?.data?.message || "Login failed");
+            const errorMsg = err.response?.data?.message || "Login failed";
+            setError(errorMsg);
+            toast.error(errorMsg);
+        } finally {
+            setIsLoading(false);
+        }
+
+        // Email verification
+        try {
+            await api.get('/auth/verify-email', {
+                validateStatus: function (status) {
+                    return status < 500; 
+                }
+            });
+        } catch (err) {
+            const errorMsg = err.response?.data?.message || "Email verification failed";
+            setError(errorMsg);
+            toast.warning(errorMsg);
         }
     };
 
