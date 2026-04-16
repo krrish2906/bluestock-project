@@ -3,55 +3,24 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Success({ onViewDashboard, onViewProfile }) {
     const navigate = useNavigate();
-
-    const handleViewDashboard = () => {
-        if (onViewDashboard) {
-            onViewDashboard();
-        } else {
-            // Fallback: navigate to home which shows overview
-            navigate('/');
-        }
-    };
-
-    const handleViewProfile = () => {
-        if (onViewProfile) {
-            onViewProfile();
-        } else {
-            // Fallback: navigate to home
-            navigate('/');
-        }
-    };
+    const handleViewDashboard = () => { if (onViewDashboard) onViewDashboard(); else navigate('/'); };
+    const handleViewProfile = () => { if (onViewProfile) onViewProfile(); else navigate('/'); };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-10">
+        <div className="bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-slate-800/60 p-10 shadow-xl shadow-black/20">
             <div className="flex flex-col items-center justify-center text-center space-y-6 py-8">
-                {/* Success Icon */}
-                <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center">
-                    <Check className="w-12 h-12 text-blue-600" strokeWidth={3} />
+                <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center">
+                    <Check className="w-10 h-10 text-emerald-400" strokeWidth={3} />
                 </div>
-
-                {/* Success Message */}
-                <div className="space-y-3">
-                    <h2 className="text-2xl font-semibold text-gray-800">
-                        🎉 Congratulations, Your profile is 100% complete!
-                    </h2>
-                    <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
-                        Your company profile is now complete and ready to be viewed by candidates. You can manage job postings, update your information, and explore your dashboard to get started.
-                    </p>
+                <div className="space-y-2">
+                    <h2 className="text-xl font-bold text-white tracking-tight">🎉 Profile 100% Complete!</h2>
+                    <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed">Your company profile is ready. Manage job postings, update info, and explore your dashboard.</p>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-4 pt-4">
-                    <button
-                        onClick={handleViewDashboard}
-                        className="px-6 py-2.5 border border-gray-300 bg-white rounded-md text-blue-600 font-medium hover:bg-gray-50 transition-colors"
-                    >
+                <div className="flex gap-3 pt-2">
+                    <button onClick={handleViewDashboard} className="px-6 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-slate-300 font-semibold hover:bg-slate-700 hover:border-slate-600 transition-all duration-200">
                         View Dashboard
                     </button>
-                    <button
-                        onClick={handleViewProfile}
-                        className="px-6 py-2.5 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
-                    >
+                    <button onClick={handleViewProfile} className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/25">
                         View Profile
                     </button>
                 </div>
