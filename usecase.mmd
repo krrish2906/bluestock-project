@@ -1,0 +1,66 @@
+flowchart LR
+    %% Actors
+    subgraph Users[Application Users]
+        G([Guest User])
+        AU([Authenticated User])
+        VU([Verified User])
+        
+        %% Inheritance approximations
+        G -.->|Becomes| AU
+        AU -.->|Verifies Email| VU
+    end
+
+    %% External Systems
+    subgraph External_Systems[External Services & Datastores]
+        FB((Firebase Auth))
+        DB[(PostgreSQL Database)]
+        Cloud((Cloudinary Storage))
+    end
+
+    %% System Boundary
+    subgraph Bluestocks
+        %% Guest Use Cases
+        UC1(User Registration)
+        UC2(User Login)
+
+        %% Authenticated Use Cases
+        UC3(View User Profile)
+        UC4(Check Email Verification)
+
+        %% Verified User Use Cases (Company Management)
+        UC5(Register New Company)
+        UC6(View Company Profile\n- Info, Overview, Social)
+        UC7(Update Company Details)
+        UC8(Upload Company Logo)
+        UC9(Upload Company Banner)
+    end
+
+    %% Guest Interactions
+    G --> UC1
+    G --> UC2
+
+    %% Authenticated Interactions
+    AU --> UC3
+    AU --> UC4
+
+    %% Verified Interactions
+    VU --> UC5
+    VU --> UC6
+    VU --> UC7
+    VU --> UC8
+    VU --> UC9
+
+    %% System Integrations
+    UC1 -.->|Create/Verify Account| FB
+    UC2 -.->|Verify Credentials| FB
+    UC4 -.->|Check Status| FB
+
+    UC3 -.->|Read User Data| DB
+    UC5 -.->|Write Company Data| DB
+    UC6 -.->|Read Company Data| DB
+    UC7 -.->|Update Company Data| DB
+    UC8 -.->|Update Logo URL| DB
+    UC9 -.->|Update Banner URL| DB
+
+    UC8 -.->|Store Image File| Cloud
+    UC9 -.->|Store Image File| Cloud

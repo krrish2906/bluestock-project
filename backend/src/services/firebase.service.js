@@ -7,15 +7,20 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/* Read Firebase service account JSON safely */
-const serviceAccountPath = path.join(
-    __dirname,
-    "../config/firebase-admin.json"
-);
+let serviceAccount;
 
-const serviceAccount = JSON.parse(
-    fs.readFileSync(serviceAccountPath, "utf8")
-);
+/* Use environment variable if available (e.g. on Render), otherwise fallback to local JSON file */
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+    const serviceAccountPath = path.join(
+        __dirname,
+        "../config/firebase-admin.json"
+    );
+    serviceAccount = JSON.parse(
+        fs.readFileSync(serviceAccountPath, "utf8")
+    );
+}
 
 if (!admin.apps.length) {
     admin.initializeApp({

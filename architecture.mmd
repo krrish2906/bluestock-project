@@ -1,0 +1,34 @@
+graph TD
+    subgraph Client [Frontend - React/Vite]
+        UI[React Components]
+        State[Redux Store]
+        API_Client[Axios API Client]
+        FB_Client[Firebase Auth Client]
+        
+        UI --> State
+        UI --> API_Client
+        UI --> FB_Client
+    end
+
+    subgraph Server [Backend - Node.js/Express]
+        Router[Express Routes]
+        AuthMid[Auth Middleware]
+        Controllers[Controllers]
+        Services[Services]
+        
+        Router --> AuthMid
+        AuthMid --> Controllers
+        Controllers --> Services
+    end
+
+    subgraph Data & External [External Services & Database]
+        DB[(Database / PostgreSQL)]
+        Cloudinary[Cloudinary Storage]
+        Firebase[Firebase Identity/Auth]
+    end
+
+    API_Client -- REST API (HTTPS) --> Router
+    Services -- Read/Write --> DB
+    Services -- Media Uploads --> Cloudinary
+    Services -- Token Verification --> Firebase
+    FB_Client -- Authentication --> Firebase
